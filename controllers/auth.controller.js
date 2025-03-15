@@ -2,7 +2,6 @@ const User = require("../models/User");
 const {
   registerService,
   loginService,
-  forgotPasswordService,
   changePasswordService,
 } = require("../services/auth.services");
 
@@ -47,7 +46,9 @@ const getProfile = async (req, res) => {
       .json({ error: "Session expired. Please login again." });
   }
   try {
-    const user = await User.findById(req.session.userId).select("-password");
+    const user = await User.findById(req.session.userId).select(
+      "-password -previousPasswords"
+    );
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

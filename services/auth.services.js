@@ -55,7 +55,7 @@ const changePasswordService = async (req, res) => {
     // Check if new password is one of the last five passwords
     const isPreviousPassword = await Promise.all(
       user.previousPasswords.map(
-        async (p) => await bcrypt.compare(newPassword, p)
+        async () => await user.comparePassword(newPassword)
       )
     );
     if (isPreviousPassword.includes(true)) {
