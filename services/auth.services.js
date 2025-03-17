@@ -13,7 +13,6 @@ const registerService = async (req, res) => {
       .status(201)
       .json({ success: true, message: "User registered successfully" });
   } catch (err) {
-    // res.status(403).json({ success: true, message: "rese" });
     if (err.code === 11000) {
       throw new Error("The email is already registered.");
     }
@@ -39,6 +38,16 @@ const loginService = async (req, res) => {
   }
 };
 
+const logoutService = async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      throw new Error("Logout failed");
+    }
+    res.clearCookie("connect.sid");
+    res.json({ success: true, message: "Logout successful" });
+  });
+};
+
 const changePasswordService = async (req, res) => {
   if (!req.session.userId) {
     throw new Error("Session expired. Please login again.");
@@ -52,7 +61,6 @@ const changePasswordService = async (req, res) => {
     if (!user || !(await user.comparePassword(currentPassword))) {
       throw new Error("Invalid current password");
     }
-    // Check if new password is one of the last five passwords
     const isPreviousPassword = await Promise.all(
       user.previousPasswords.map(
         async () => await user.comparePassword(newPassword)
@@ -73,4 +81,5 @@ module.exports = {
   registerService,
   loginService,
   changePasswordService,
+  logoutService,
 };

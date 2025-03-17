@@ -3,6 +3,7 @@ const {
   registerService,
   loginService,
   changePasswordService,
+  logoutService,
 } = require("../services/auth.services");
 
 const register = async (req, res) => {
@@ -28,15 +29,13 @@ const changePassword = async (req, res) => {
     res.status(400).json({ success: false, message: err.message });
   }
 };
-// Logout user
-const logout = (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: "Logout failed" });
-    }
-    res.clearCookie("connect.sid");
-    res.json({ message: "Logout successful" });
-  });
+
+const logout = async (req, res) => {
+  try {
+    await logoutService(req, res);
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
 };
 
 const getProfile = async (req, res) => {
