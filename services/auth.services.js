@@ -1,9 +1,10 @@
 const User = require("../models/User");
+const ApiError = require("../utils/apiErrors");
 
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
-    throw new Error("Required fields are missing");
+    throw new ApiError(400, "Required fields are missing");
   }
   try {
     const user = new User({ name, email, password, previousPasswords: [] });
@@ -14,34 +15,37 @@ const registerService = async (req, res) => {
       .json({ success: true, message: "User registered successfully" });
   } catch (err) {
     if (err.code === 11000) {
-      throw new Error("The email is already registered.");
+      throw new ApiError(409, "The email is already registered.");
     }
-    throw new Error("Internal Server Error");
+    throw new ApiError(500, "Internal Server Error");
   }
 };
 
 const loginService = async (req, res) => {
   const { email, password } = req.body;
+  if (!email || !password) {
+    throw new ApiError(400, "Required fields are missing");
+  }
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      throw new Error("Invalid credentials");
+      throw new ApiError(401, "Invalid credentials");
     }
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      throw new Error("Invalid credentials");
+      throw new ApiError(401, "Invalid credentials");
     }
     req.session.userId = user._id;
     res.json({ success: true, message: "Login successful" });
   } catch (err) {
-    throw new Error("Login failed");
+    throw new ApiError(401, "Login failed");
   }
 };
 
 const logoutService = async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
-      throw new Error("Logout failed");
+      throw new ApiError(500, "Logout failed");
     }
     res.clearCookie("connect.sid");
     res.json({ success: true, message: "Logout successful" });
@@ -50,16 +54,16 @@ const logoutService = async (req, res) => {
 
 const changePasswordService = async (req, res) => {
   if (!req.session.userId) {
-    throw new Error("Session expired. Please login again.");
+    throw new ApiError(401, "Session expired. Please login again.");
   }
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
-    throw new Error("Required field are missing");
+    throw new ApiError(400, "Required fields are missing");
   }
   try {
     const user = await User.findById(req.session.userId);
     if (!user || !(await user.comparePassword(currentPassword))) {
-      throw new Error("Invalid current password");
+      throw new ApiError("Invalid current password");
     }
     const isPreviousPassword = await Promise.all(
       user.previousPasswords.map(
@@ -67,13 +71,33 @@ const changePasswordService = async (req, res) => {
       )
     );
     if (isPreviousPassword.includes(true)) {
-      throw new Error("Cannot use one of the last five passwords");
+      throw new ApiError(
+        422,
+        "You cannot use one of your last five passwords. Please choose a new password."
+      );
     }
     user.password = newPassword;
     await user.save();
     res.json({ message: "Password changed successfully" });
   } catch (err) {
-    throw new Error("Failed to change password " + err.message);
+    throw new ApiError(500, "Failed to change password " + err.message);
+  }
+};
+
+const getProfileService = async (req, res) => {
+  if (!req.session.userId) {
+    throw new ApiError(401, "Session expired. Please login again.");
+  }
+  try {
+    const user = await User.findById(req.session.userId).select(
+      "-password -previousPasswords -__v"
+    );
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    res.json({ success: true, data: user });
+  } catch (err) {
+    throw new ApiError(500, "Failed to fetch profile");
   }
 };
 
@@ -82,4 +106,5 @@ module.exports = {
   loginService,
   changePasswordService,
   logoutService,
+  getProfileService,
 };

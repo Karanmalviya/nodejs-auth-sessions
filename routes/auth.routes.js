@@ -12,7 +12,7 @@ router.post(
 );
 router.post("/login", authController.login);
 router.post("/logout", authController.logout);
-router.get("/profile", authController.getProfile);
+router.get("/user", authController.getProfile);
 router.post("/change-password", authController.changePassword);
 
 module.exports = router;
