@@ -1,25 +1,43 @@
 const express = require("express");
-const session = require("express-session");
 const connectDB = require("./config/db");
+const session = require("express-session");
 const authRoutes = require("./routes/auth.routes");
 const cors = require("cors");
 const ApiError = require("./utils/apiErrors");
-require("dotenv").config();
+const cookieParser = require("cookie-parser");
+const csurf = require("csurf");
+const errorMiddleware = require("./middlewares/errorMiddleware");
+const rateLimit = require("express-rate-limit");
 
+require("dotenv").config();
 const app = express();
+const PORT = process.env.PORT || 5000;
 connectDB();
 
-const whitelist = [
-  "http://localhost:5173",
-  "https://trusted-domain.com",
-  "https://another-trusted-domain.com",
-];
+app.use(cookieParser());
+// app.use(csurf({ cookie: true }));
+app.use(errorMiddleware);
+app.use(express.json());
+const whitelist = ["http://localhost:5173"];
+
+// const rateLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 2,
+//   message: {
+//     success: false,
+//     message: "Too many requests, please try again later.",
+//   },
+//   skip: (req, res) => whitelist.includes(req.ip),
+// });
+
+// app.use(rateLimiter);
+
 const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || whitelist.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new ApiError(403, "Not allowed by CORS"));
+      callback(new Error());
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -30,15 +48,15 @@ const corsOptions = {
 app.use((req, res, next) => {
   cors(corsOptions)(req, res, (err) => {
     if (err) {
+      console.log(err);
       return res.status(403).json({
         success: false,
         message: "CORS Error: Not allowed by CORS",
       });
     }
-    next();
+    // next();
   });
 });
-app.use(express.json());
 
 app.use(
   session({
@@ -54,12 +72,17 @@ app.use(
 );
 
 app.use("/api", authRoutes);
+app.get("/csrf-token", (req, res) => {
+  res.status(201).json({ csrfToken: req.csrfToken() });
+});
 
 app.get("/hello", (req, res) => {
   res.send("Hello");
 });
 
-const PORT = process.env.PORT || 5000;
+app.use((req, res, next) => {
+  next(new ApiError(404, "Resource not found"));
+});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

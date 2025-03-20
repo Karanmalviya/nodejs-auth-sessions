@@ -13,6 +13,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
   try {
+    console.log("req", req.body);
     await auth.loginService(req, res);
   } catch (err) {
     res
