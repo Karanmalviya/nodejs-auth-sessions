@@ -1,12 +1,9 @@
+import axios from "axios";
 import { toast } from "sonner";
 
 export const login = async (body) => {
   try {
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const res = await axios("/api/login", body);
     if (!res.ok) {
       throw new Error(res.statusText || "Something went wrong!");
     }
@@ -14,12 +11,13 @@ export const login = async (body) => {
     toast.success(resJson.message);
     return resJson;
   } catch (error) {
-    toast.error(error.message);
+    console.log(error, "llllllllllll");
+    toast.error(error.response.data.message);
     return error;
   }
 };
 
-export const logout = async (body) => {
+export const logout = async () => {
   try {
     const res = await fetch("/api/logout", {
       method: "POST",
