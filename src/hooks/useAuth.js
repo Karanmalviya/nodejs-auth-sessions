@@ -9,6 +9,7 @@ export function useAuth() {
     const checkAuth = async () => {
       try {
         const res = await getUser();
+        console.log(res);
         setIsLoggedIn(res.success);
       } catch (error) {
         console.error("Authentication check failed:", error);

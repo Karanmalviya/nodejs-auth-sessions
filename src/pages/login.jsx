@@ -28,6 +28,7 @@ const Login = () => {
               type="email"
               id="email"
               name="email"
+              autoComplete="username"
               required
               onChange={(e) =>
                 setData({ ...data, [e.target.name]: e.target.value })
@@ -48,6 +49,7 @@ const Login = () => {
               type="password"
               id="password"
               name="password"
+              autoComplete="current-password"
               onChange={(e) =>
                 setData({ ...data, [e.target.name]: e.target.value })
               }

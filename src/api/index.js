@@ -3,20 +3,23 @@ import { toast } from "sonner";
 
 export const login = async (body) => {
   try {
-    const res = await axios("/api/login", body);
-    if (!res.ok) {
-      throw new Error(res.statusText || "Something went wrong!");
-    }
-    const resJson = await res.json();
-    toast.success(resJson.message);
-    return resJson;
+    const res = await axios.post("/api/login", body);
+    toast.success(res.data.message);
+    return res.data;
   } catch (error) {
-    console.log(error, "llllllllllll");
-    toast.error(error.response.data.message);
+    toast.error(error.response?.data?.message || "Login failed");
     return error;
   }
 };
 
+export const csrfToken = async (body) => {
+  try {
+    const res = await axios.get("/api/csrf-token", body);
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+};
 export const logout = async () => {
   try {
     const res = await fetch("/api/logout", {
