@@ -3,7 +3,6 @@ const connectDB = require("./config/db");
 const session = require("express-session");
 const authRoutes = require("./routes/auth.routes");
 const cors = require("cors");
-const ApiError = require("./utils/apiErrors");
 const cookieParser = require("cookie-parser");
 const csurf = require("csurf");
 const errorMiddleware = require("./middlewares/errorMiddleware");
@@ -15,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 app.use(cookieParser());
-// app.use(csurf({ cookie: true }));
+app.use(csurf({ cookie: true }));
 app.use(errorMiddleware);
 app.use(express.json());
 const whitelist = ["http://localhost:5173"];
@@ -48,13 +47,12 @@ const corsOptions = {
 app.use((req, res, next) => {
   cors(corsOptions)(req, res, (err) => {
     if (err) {
-      console.log(err);
       return res.status(403).json({
         success: false,
         message: "CORS Error: Not allowed by CORS",
       });
     }
-    // next();
+    next();
   });
 });
 
@@ -72,7 +70,7 @@ app.use(
 );
 
 app.use("/api", authRoutes);
-app.get("/csrf-token", (req, res) => {
+app.get("/api/csrf-token", (req, res) => {
   res.status(201).json({ csrfToken: req.csrfToken() });
 });
 
@@ -80,9 +78,6 @@ app.get("/hello", (req, res) => {
   res.send("Hello");
 });
 
-app.use((req, res, next) => {
-  next(new ApiError(404, "Resource not found"));
-});
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

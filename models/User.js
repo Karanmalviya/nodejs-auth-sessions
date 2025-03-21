@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   previousPasswords: [{ type: String }],
+  failedLoginAttempts: { type: Number, default: 0 },
+  blockUntil: { type: Date, default: null },
 });
 
 userSchema.pre("save", async function (next) {

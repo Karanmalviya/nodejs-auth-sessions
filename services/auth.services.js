@@ -17,7 +17,10 @@ const registerService = async (req, res) => {
     if (err.code === 11000) {
       throw new ApiError(409, "The email is already registered.");
     }
-    throw new ApiError(500, "Internal Server Error");
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -38,7 +41,7 @@ const loginService = async (req, res) => {
     req.session.userId = user._id;
     res.json({ success: true, message: "Login successful" });
   } catch (err) {
-    throw new ApiError(401, "Login failed");
+    throw new ApiError(err.statusCode || 401, err.message || "Login failed");
   }
 };
 

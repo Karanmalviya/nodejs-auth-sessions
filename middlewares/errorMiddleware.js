@@ -1,6 +1,12 @@
 const errorMiddleware = (err, req, res, next) => {
-  console.log("err.stack", err.stack);
   const statusCode = err.status || 500;
+
+  if (err.code === "EBADCSRFTOKEN") {
+    //csrf token error
+    return res
+      .status(statusCode)
+      .json({ success: false, message: "Unauthorized request" });
+  }
   res.status(statusCode).json({
     success: false,
     message: err.message || "Something went wrong",
@@ -8,18 +14,3 @@ const errorMiddleware = (err, req, res, next) => {
 };
 
 module.exports = errorMiddleware;
-
-// class ApiError extends Error {
-//   constructor(statusCode, message, isOperational = true, stack = "") {
-//     super(message);
-//     this.statusCode = statusCode;
-//     this.isOperational = isOperational;
-//     if (stack) {
-//       this.stack = stack;
-//     } else {
-//       Error.captureStackTrace(this, this.constructor);
-//     }
-//   }
-// }
-
-// module.exports = ApiError;
