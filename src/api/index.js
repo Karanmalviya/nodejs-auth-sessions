@@ -1,9 +1,12 @@
 import axios from "axios";
 import { toast } from "sonner";
 
-export const login = async (body) => {
+export const login = async (body, csrf) => {
   try {
-    const res = await axios.post("/api/login", body);
+    const res = await axios.post("/api/login", body, {
+      headers: { "X-CSRF-Token": csrfToken },
+      withCredentials: true,
+    });
     toast.success(res.data.message);
     return res.data;
   } catch (error) {
@@ -12,14 +15,15 @@ export const login = async (body) => {
   }
 };
 
-export const csrfToken = async (body) => {
+export const csrfToken = async () => {
   try {
-    const res = await axios.get("/api/csrf-token", body);
+    const res = await axios.get("/api/csrf-token", { withCredentials: true });
     return res.data;
   } catch (error) {
     return error;
   }
 };
+
 export const logout = async () => {
   try {
     const res = await fetch("/api/logout", {
