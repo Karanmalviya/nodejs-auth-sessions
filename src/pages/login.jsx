@@ -1,14 +1,16 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { login } from "../api";
+import { Context } from "../context";
 
 const Login = () => {
   const [data, setData] = useState({ email: "", password: "" });
   const navigate = useNavigate();
+  const csrfToken = useContext(Context);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const res = await login(data);
+    const res = await login(data, csrfToken);
     if (res.success) navigate("/");
   };
 

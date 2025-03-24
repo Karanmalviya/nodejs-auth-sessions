@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createContext } from "react";
 import { csrfToken } from "./api";
 
-const Context = createContext("");
+export const Context = createContext("");
 
 export default function CSRFContext({ children }) {
   const [csrf, setCsrf] = useState("");

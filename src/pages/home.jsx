@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { logout } from "../api";
 import { useNavigate } from "react-router";
+import { Context } from "../context";
 
 export default function Home() {
   const navigate = useNavigate();
+  const csrfToken = useContext(Context);
 
   const handleLogout = async () => {
-    const res = await logout();
+    const res = await logout(csrfToken);
     if (res.success) navigate("/login");
   };
   return (
