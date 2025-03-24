@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const saltRounds = 12;
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -12,7 +13,7 @@ const userSchema = new mongoose.Schema({
 
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    const hashedPassword = await bcrypt.hash(this.password, 10);
+    const hashedPassword = await bcrypt.hash(this.password, saltRounds);
     this.previousPasswords.push(hashedPassword);
     if (this.previousPasswords.length > 5) {
       this.previousPasswords.shift();

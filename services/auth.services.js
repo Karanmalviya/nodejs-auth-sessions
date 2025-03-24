@@ -24,27 +24,131 @@ const registerService = async (req, res) => {
   }
 };
 
+// const loginService = async (req, res) => {
+//   const { email, password } = req.body;
+//   if (!email || !password) {
+//     throw new ApiError(400, "Required fields are missing");
+//   }
+//   try {
+//     const user = await User.findOne({ email });
+//     if (!user) {
+//       throw new ApiError(401, "Invalid credentials");
+//     }
+//     // Check if the user is blocked
+//     if (user.blockUntil && user.blockUntil > new Date()) {
+//       throw new ApiError(
+//         403,
+//         `Account blocked. Try again after ${user.blockUntil}.`
+//       );
+//     }
+//     const isMatch = await user.comparePassword(password);
+//     if (!isMatch) {
+//       // Increment failed login attempts
+//       user.failedLoginAttempts += 1;
+
+//       // Block the user if failed attempts reach 3
+//       if (user.failedLoginAttempts >= 3) {
+//         user.blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Block for 24 hours
+//       }
+
+//       await user.save();
+
+//       throw new ApiError(
+//         401,
+//         `Invalid credentials. Attempts left: ${3 - user.failedLoginAttempts}`
+//       );
+//       // throw new ApiError(401, "Invalid credentials");
+//     }
+//     // Reset failed attempts and block status on successful login
+//     user.failedLoginAttempts = 0;
+//     user.blockUntil = null;
+//     req.session.userId = user._id;
+//     res.json({ success: true, message: "Login successful" });
+//   } catch (err) {
+//     throw new ApiError(err.statusCode || 401, err.message || "Login failed");
+//   }
+// };
+
+
 const loginService = async (req, res) => {
   const { email, password } = req.body;
+  
+  // Validate input
   if (!email || !password) {
-    throw new ApiError(400, "Required fields are missing");
+    throw new ApiError(400, "Email and password are required");
   }
+
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
     }
+
+    // Check if the user is blocked
+    const now = new Date();
+    if (user.blockUntil && user.blockUntil > now) {
+      const timeLeft = Math.ceil((user.blockUntil - now) / (60 * 60 * 1000)); // hours remaining
+      throw new ApiError(
+        403,
+        `Account temporarily blocked. Please try again in ${timeLeft} hour(s).`
+      );
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      throw new ApiError(401, "Invalid credentials");
+      // Increment failed login attempts
+      user.failedLoginAttempts += 1;
+
+      // Block the user if failed attempts reach 3
+      if (user.failedLoginAttempts >= 3) {
+        user.blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Block for 24 hours
+        await user.save();
+        throw new ApiError(
+          403,
+          "Account temporarily blocked due to multiple failed attempts. Please try again after 24 hours."
+        );
+      }
+
+      await user.save();
+      throw new ApiError(
+        401,
+        `Invalid credentials. ${3 - user.failedLoginAttempts} attempt(s) remaining`
+      );
     }
+
+    // Reset failed attempts and block status on successful login
+    user.failedLoginAttempts = 0;
+    user.blockUntil = null;
+    await user.save();
+
+    // Create session
     req.session.userId = user._id;
-    res.json({ success: true, message: "Login successful" });
+    
+    // Omit sensitive data from response
+    const userData = {
+      id: user._id,
+      email: user.email,
+      // add other non-sensitive user fields as needed
+    };
+
+    res.json({ 
+      success: true, 
+      message: "Login successful",
+      user: userData
+    });
   } catch (err) {
-    throw new ApiError(err.statusCode || 401, err.message || "Login failed");
+    // Handle specific database errors
+    if (err.name === 'MongoError') {
+      throw new ApiError(500, "Database error occurred during login");
+    }
+    
+    // Re-throw ApiError instances, create new ones for other errors
+    if (err instanceof ApiError) {
+      throw err;
+    }
+    throw new ApiError(500, "An unexpected error occurred during login");
   }
 };
-
 const logoutService = async (req, res) => {
   req.session.destroy((err) => {
     if (err) {

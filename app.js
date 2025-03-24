@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const csurf = require("csurf");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 
 require("dotenv").config();
 const app = express();
@@ -55,6 +56,7 @@ app.use((req, res, next) => {
     next();
   });
 });
+app.use(helmet({ contentSecurityPolicy: true, xssFilter: true }));
 
 app.use(
   session({
@@ -65,6 +67,7 @@ app.use(
       maxAge: 10 * 60 * 1000,
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
+      sameSite: "strict",
     },
   })
 );
