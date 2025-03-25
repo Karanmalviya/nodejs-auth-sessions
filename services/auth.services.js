@@ -69,17 +69,16 @@ const registerService = async (req, res) => {
 //   }
 // };
 
-
 const loginService = async (req, res) => {
   const { email, password } = req.body;
-  
+
   // Validate input
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
 
   try {
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
     }
@@ -112,7 +111,9 @@ const loginService = async (req, res) => {
       await user.save();
       throw new ApiError(
         401,
-        `Invalid credentials. ${3 - user.failedLoginAttempts} attempt(s) remaining`
+        `Invalid credentials. ${
+          3 - user.failedLoginAttempts
+        } attempt(s) remaining`
       );
     }
 
@@ -123,25 +124,16 @@ const loginService = async (req, res) => {
 
     // Create session
     req.session.userId = user._id;
-    
-    // Omit sensitive data from response
-    const userData = {
-      id: user._id,
-      email: user.email,
-      // add other non-sensitive user fields as needed
-    };
-
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: "Login successful",
-      user: userData
     });
   } catch (err) {
     // Handle specific database errors
-    if (err.name === 'MongoError') {
+    if (err.name === "MongoError") {
       throw new ApiError(500, "Database error occurred during login");
     }
-    
+
     // Re-throw ApiError instances, create new ones for other errors
     if (err instanceof ApiError) {
       throw err;
