@@ -31,6 +31,26 @@ const changePassword = async (req, res) => {
   }
 };
 
+const forgotPassword = async (req, res) => {
+  try {
+    await auth.forgotPasswordService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+const sendOtp = async (req, res) => {
+  try {
+    await auth.sendOtpService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 const logout = async (req, res) => {
   try {
     await auth.logoutService(req, res);
@@ -57,4 +77,6 @@ module.exports = {
   logout,
   getProfile,
   changePassword,
+  forgotPassword,
+  sendOtp,
 };

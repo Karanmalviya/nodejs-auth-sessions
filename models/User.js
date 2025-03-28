@@ -9,6 +9,10 @@ const userSchema = new mongoose.Schema({
   previousPasswords: [{ type: String }],
   failedLoginAttempts: { type: Number, default: 0 },
   blockUntil: { type: Date, default: null },
+  passwordExpiry: {
+    type: Date,
+    default: Date.now() + 90 * 24 * 60 * 60 * 1000,
+  },
 });
 
 userSchema.pre("save", async function (next) {

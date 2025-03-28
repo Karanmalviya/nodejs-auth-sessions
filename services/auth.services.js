@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const ApiError = require("../utils/apiErrors");
+const { transporter } = require("../helper/nodemailer");
 
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
@@ -24,51 +25,6 @@ const registerService = async (req, res) => {
   }
 };
 
-// const loginService = async (req, res) => {
-//   const { email, password } = req.body;
-//   if (!email || !password) {
-//     throw new ApiError(400, "Required fields are missing");
-//   }
-//   try {
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       throw new ApiError(401, "Invalid credentials");
-//     }
-//     // Check if the user is blocked
-//     if (user.blockUntil && user.blockUntil > new Date()) {
-//       throw new ApiError(
-//         403,
-//         `Account blocked. Try again after ${user.blockUntil}.`
-//       );
-//     }
-//     const isMatch = await user.comparePassword(password);
-//     if (!isMatch) {
-//       // Increment failed login attempts
-//       user.failedLoginAttempts += 1;
-
-//       // Block the user if failed attempts reach 3
-//       if (user.failedLoginAttempts >= 3) {
-//         user.blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Block for 24 hours
-//       }
-
-//       await user.save();
-
-//       throw new ApiError(
-//         401,
-//         `Invalid credentials. Attempts left: ${3 - user.failedLoginAttempts}`
-//       );
-//       // throw new ApiError(401, "Invalid credentials");
-//     }
-//     // Reset failed attempts and block status on successful login
-//     user.failedLoginAttempts = 0;
-//     user.blockUntil = null;
-//     req.session.userId = user._id;
-//     res.json({ success: true, message: "Login successful" });
-//   } catch (err) {
-//     throw new ApiError(err.statusCode || 401, err.message || "Login failed");
-//   }
-// };
-
 const loginService = async (req, res) => {
   const { email, password } = req.body;
 
@@ -81,6 +37,9 @@ const loginService = async (req, res) => {
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
+    }
+    if (user.passwordExpiry && user.passwordExpiry < new Date()) {
+      throw new ApiError(401, "Password expired. Please reset your password.");
     }
 
     // Check if the user is blocked
@@ -176,10 +135,59 @@ const changePasswordService = async (req, res) => {
       );
     }
     user.password = newPassword;
+    user.passwordExpiry = new Date() + 90 * 24 * 60 * 60 * 1000;
     await user.save();
-    res.json({ message: "Password changed successfully" });
+    res.json({ success: true, message: "Password changed successfully" });
   } catch (err) {
     throw new ApiError(500, "Failed to change password " + err.message);
+  }
+};
+
+const forgotPasswordService = async (req, res) => {
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 15 * 60 * 1000; // OTP valid for 15 minutes
+
+    otpStorage.set(email, { otp, expiry: otpExpiry });
+
+    const mailOptions = {
+      from: process.env.STMP_USER,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP for password reset is: ${otp}. This OTP is valid for 15 minutes.`,
+      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. This OTP is valid for 15 minutes.</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: "OTP sent successfully" });
+  } catch (err) {
+    throw new ApiError(500, "Failed to send OTP: " + err.message);
+  }
+};
+const sendOtpService = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    const mailOptions = {
+      from: process.env.STMP_USER,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your OTP for password reset is: 5454545. This OTP is valid for 15 minutes.`,
+      html: `<p>Your OTP for password reset is: <strong>5454545</strong>. This OTP is valid for 15 minutes.</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: "OTP sent successfully" });
+  } catch (err) {
+    throw new ApiError(500, "Failed to send OTP: " + err.message);
   }
 };
 
@@ -206,4 +214,6 @@ module.exports = {
   changePasswordService,
   logoutService,
   getProfileService,
+  forgotPasswordService,
+  sendOtpService,
 };
