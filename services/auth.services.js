@@ -207,6 +207,13 @@ const getProfileService = async (req, res) => {
     throw new ApiError(500, "Failed to fetch profile");
   }
 };
+const csrfService = async (req, res) => {
+  try {
+    res.status(201).json({ csrfToken: req.csrfToken() });
+  } catch (err) {
+    throw new ApiError(500, "Failed to generate csrf token");
+  }
+};
 
 module.exports = {
   registerService,
@@ -216,4 +223,5 @@ module.exports = {
   getProfileService,
   forgotPasswordService,
   sendOtpService,
+  csrfService,
 };

@@ -71,6 +71,16 @@ const getProfile = async (req, res) => {
   }
 };
 
+const csrf = async (req, res) => {
+  try {
+    await auth.csrfService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -79,4 +89,5 @@ module.exports = {
   changePassword,
   forgotPassword,
   sendOtp,
+  csrf,
 };

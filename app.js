@@ -6,7 +6,6 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const csurf = require("csurf");
 const errorMiddleware = require("./middlewares/errorMiddleware");
-const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 
 require("dotenv").config();
@@ -19,18 +18,6 @@ app.use(csurf({ cookie: true }));
 app.use(errorMiddleware);
 app.use(express.json());
 const whitelist = ["http://localhost:5173"];
-
-// const rateLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 2,
-//   message: {
-//     success: false,
-//     message: "Too many requests, please try again later.",
-//   },
-//   skip: (req, res) => whitelist.includes(req.ip),
-// });
-
-// app.use(rateLimiter);
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -72,12 +59,9 @@ app.use(
   })
 );
 
-app.use("/api", authRoutes);
-app.get("/api/csrf-token", (req, res) => {
-  res.status(201).json({ csrfToken: req.csrfToken() });
-});
+app.use("/api/v1", authRoutes);
 
-app.get("/hello", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Hello");
 });
 
