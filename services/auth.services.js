@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const ApiError = require("../utils/apiErrors");
 const { transporter } = require("../helper/nodemailer");
+const { createCsrfToken, hashToken } = require("../utils/csrf");
 
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
@@ -100,6 +101,7 @@ const loginService = async (req, res) => {
     throw new ApiError(500, "An unexpected error occurred during login");
   }
 };
+
 const logoutService = async (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -169,6 +171,7 @@ const forgotPasswordService = async (req, res) => {
     throw new ApiError(500, "Failed to send OTP: " + err.message);
   }
 };
+
 const sendOtpService = async (req, res) => {
   const { email } = req.body;
   try {
@@ -209,7 +212,15 @@ const getProfileService = async (req, res) => {
 };
 const csrfService = async (req, res) => {
   try {
-    res.status(201).json({ csrfToken: req.csrfToken() });
+    const csrfToken = createCsrfToken();
+
+    res.cookie("csrf_token", hashToken(csrfToken), {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+    });
+
+    res.status(201).json({ csrfToken });
   } catch (err) {
     throw new ApiError(500, "Failed to generate csrf token");
   }

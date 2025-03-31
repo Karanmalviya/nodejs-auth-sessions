@@ -1,23 +1,22 @@
+require("dotenv").config();
+require("./config/db").connectDB();
 const express = require("express");
-const connectDB = require("./config/db");
 const session = require("express-session");
 const authRoutes = require("./routes/auth.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const csurf = require("csurf");
 const errorMiddleware = require("./middlewares/errorMiddleware");
 const helmet = require("helmet");
+const csrfMiddleware = require("./middlewares/csrfMiddleware");
 
-require("dotenv").config();
 const app = express();
+const whitelist = ["http://localhost:5173"];
 const PORT = process.env.PORT || 5000;
-connectDB();
 
 app.use(cookieParser());
-app.use(csurf({ cookie: true }));
-app.use(errorMiddleware);
 app.use(express.json());
-const whitelist = ["http://localhost:5173"];
+app.use(errorMiddleware);
+app.use(csrfMiddleware);
 
 const corsOptions = {
   origin: (origin, callback) => {
