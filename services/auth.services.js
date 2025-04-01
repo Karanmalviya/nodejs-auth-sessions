@@ -1,8 +1,8 @@
 const User = require("../models/User");
 const ApiError = require("../utils/apiErrors");
-const { transporter } = require("../helper/nodemailer");
+const { sendMail } = require("../helper/nodemailer");
 const { createCsrfToken, hashToken } = require("../utils/csrf");
-
+const jwt = require("jsonwebtoken");
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -84,6 +84,10 @@ const loginService = async (req, res) => {
 
     // Create session
     req.session.userId = user._id;
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.cookie("token", token, { httpOnly: true });
     res.json({
       success: true,
       message: "Login successful",
@@ -180,14 +184,14 @@ const sendOtpService = async (req, res) => {
       throw new ApiError(404, "User not found");
     }
     const mailOptions = {
-      from: process.env.STMP_USER,
+      from: `"InfinityOPS"${process.env.STMP_USER}`,
       to: email,
       subject: "Password Reset OTP",
       text: `Your OTP for password reset is: 5454545. This OTP is valid for 15 minutes.`,
       html: `<p>Your OTP for password reset is: <strong>5454545</strong>. This OTP is valid for 15 minutes.</p>`,
     };
 
-    await transporter.sendMail(mailOptions);
+    await sendMail(mailOptions.to, mailOptions.subject, mailOptions.html);
     res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
     throw new ApiError(500, "Failed to send OTP: " + err.message);

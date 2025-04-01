@@ -5,9 +5,10 @@ const session = require("express-session");
 const authRoutes = require("./routes/auth.routes");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const errorMiddleware = require("./middlewares/errorMiddleware");
+const errorMiddleware = require("./middlewares/error.middleware");
 const helmet = require("helmet");
-const csrfMiddleware = require("./middlewares/csrfMiddleware");
+const csrfMiddleware = require("./middlewares/csrf.middleware");
+const accessTokenMiddleware = require("./middlewares/accessToken.middleware");
 
 const app = express();
 const whitelist = ["http://localhost:5173"];
@@ -17,6 +18,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(errorMiddleware);
 app.use(csrfMiddleware);
+app.use(accessTokenMiddleware);
 
 const corsOptions = {
   origin: (origin, callback) => {
