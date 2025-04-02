@@ -3,6 +3,7 @@ const ApiError = require("../utils/apiErrors");
 const { sendMail } = require("../helper/nodemailer");
 const { createCsrfToken, hashToken } = require("../utils/csrf");
 const jwt = require("jsonwebtoken");
+const { generateAccessToken, generateRefreshToken } = require("../helper/jwt");
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -28,8 +29,6 @@ const registerService = async (req, res) => {
 
 const loginService = async (req, res) => {
   const { email, password } = req.body;
-
-  // Validate input
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
@@ -43,7 +42,6 @@ const loginService = async (req, res) => {
       throw new ApiError(401, "Password expired. Please reset your password.");
     }
 
-    // Check if the user is blocked
     const now = new Date();
     if (user.blockUntil && user.blockUntil > now) {
       const timeLeft = Math.ceil((user.blockUntil - now) / (60 * 60 * 1000)); // hours remaining
@@ -55,10 +53,7 @@ const loginService = async (req, res) => {
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      // Increment failed login attempts
       user.failedLoginAttempts += 1;
-
-      // Block the user if failed attempts reach 3
       if (user.failedLoginAttempts >= 3) {
         user.blockUntil = new Date(Date.now() + 24 * 60 * 60 * 1000); // Block for 24 hours
         await user.save();
@@ -71,34 +66,25 @@ const loginService = async (req, res) => {
       await user.save();
       throw new ApiError(
         401,
-        `Invalid credentials. ${
-          3 - user.failedLoginAttempts
+        `Invalid credentials. ${3 - user.failedLoginAttempts
         } attempt(s) remaining`
       );
     }
 
-    // Reset failed attempts and block status on successful login
     user.failedLoginAttempts = 0;
     user.blockUntil = null;
+    user.refershToken = generateAccessToken(res, user);
+    user.accessToken = generateRefreshToken(res, user);
     await user.save();
-
-    // Create session
     req.session.userId = user._id;
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
-    res.cookie("token", token, { httpOnly: true });
     res.json({
       success: true,
       message: "Login successful",
     });
   } catch (err) {
-    // Handle specific database errors
     if (err.name === "MongoError") {
       throw new ApiError(500, "Database error occurred during login");
     }
-
-    // Re-throw ApiError instances, create new ones for other errors
     if (err instanceof ApiError) {
       throw err;
     }
@@ -112,6 +98,7 @@ const logoutService = async (req, res) => {
       throw new ApiError(500, "Logout failed");
     }
     res.clearCookie("connect.sid");
+    res.clearCookie("tokeb");
     res.json({ success: true, message: "Logout successful" });
   });
 };
@@ -214,7 +201,7 @@ const getProfileService = async (req, res) => {
     throw new ApiError(500, "Failed to fetch profile");
   }
 };
-const csrfService = async (req, res) => {
+const csrfTokenService = async (req, res) => {
   try {
     const csrfToken = createCsrfToken();
 
@@ -230,6 +217,23 @@ const csrfService = async (req, res) => {
   }
 };
 
+const refreshTokenService = async (req, res) => {
+  try {
+    const refreshTokenClient =
+      req.cookies.refreshToken || req.body.refreshToken;
+    const refreshTokenServer = await User.find({
+      refreshToken: refreshTokenClient,
+    });
+    if (!refreshTokenServer) {
+      throw new ApiError(403, "Invalid refresh token");
+    }
+    const accessToken = generateAccessToken();
+    res.status(201).json({ accessToken });
+  } catch (err) {
+    throw new ApiError(500, "Failed to generate accessToken token");
+  }
+};
+
 module.exports = {
   registerService,
   loginService,
@@ -238,5 +242,6 @@ module.exports = {
   getProfileService,
   forgotPasswordService,
   sendOtpService,
-  csrfService,
+  csrfTokenService,
+  refreshTokenService,
 };

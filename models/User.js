@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now() + 90 * 24 * 60 * 60 * 1000,
   },
+  refershToken: { type: String, default: null },
+  accessToken: { type: String, default: null },
 });
 
 userSchema.pre("save", async function (next) {

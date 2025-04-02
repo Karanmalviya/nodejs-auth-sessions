@@ -71,9 +71,19 @@ const getProfile = async (req, res) => {
   }
 };
 
-const csrf = async (req, res) => {
+const csrfToken = async (req, res) => {
   try {
     await auth.csrfService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+const refreshToken = async (req, res) => {
+  try {
+    await auth.refreshTokenService(req, res);
   } catch (err) {
     res
       .status(err.statusCode || 500)
@@ -89,5 +99,6 @@ module.exports = {
   changePassword,
   forgotPassword,
   sendOtp,
-  csrf,
+  csrfToken,
+  refreshToken,
 };

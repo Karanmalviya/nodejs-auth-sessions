@@ -17,17 +17,20 @@ const authRateLimit = rateLimit({
 
 router.post(
   "/register",
+  authRateLimit,
   registerValidation,
   validateRequest,
   authController.register
 );
 
 router.post("/login", authRateLimit, authController.login);
-router.post("/logout", authController.logout);
-router.get("/user", authController.getProfile);
 router.post("/change-password", authController.changePassword);
 router.post("/forgot-password", authController.forgotPassword);
 router.post("/send-otp", authController.sendOtp);
-router.get("/csrf-token", authController.csrf);
+router.get("/csrf-token", authController.csrfToken);
+router.get("/refresh-token", authController.refreshToken);
+
+router.post("/logout", authController.logout);
+router.get("/user", authController.getProfile);
 
 module.exports = router;
