@@ -11,21 +11,21 @@ const publicRoutes = [
 ];
 const authMiddleware = (req, res, next) => {
   const isPublicRoute = publicRoutes.some((route) => req.path.endsWith(route));
-  const token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
-
+  const accessToken = req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
+  console.log(accessToken, "\nhfjkhfsd")
   if (isPublicRoute) {
     return next();
   }
-  if (!token) {
+  if (!accessToken) {
     throw new ApiError(401, "Access token required");
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     req.user = decoded;
     return next();
   } catch (err) {
-    res.clearCookie("token");
+    res.clearCookie("accessToken");
     throw new ApiError(403, "Invalid or expired access token");
   }
 };

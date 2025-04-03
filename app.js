@@ -25,7 +25,6 @@ app.use(csrfMiddleware);
 app.use(authMiddleware);
 
 app.use("/api/v1", authRoutes);
-
 app.get("/", (req, res) => {
   res.send("Hello");
 });

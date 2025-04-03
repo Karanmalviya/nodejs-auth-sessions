@@ -2,8 +2,8 @@ const User = require("../models/User");
 const ApiError = require("../utils/apiErrors");
 const { sendMail } = require("../helper/nodemailer");
 const { createCsrfToken, hashToken } = require("../utils/csrf");
-const jwt = require("jsonwebtoken");
 const { generateAccessToken, generateRefreshToken } = require("../helper/jwt");
+const generateOTP = require("../utils/generateOtp");
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -32,7 +32,6 @@ const loginService = async (req, res) => {
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
-
   try {
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
@@ -41,7 +40,6 @@ const loginService = async (req, res) => {
     if (user.passwordExpiry && user.passwordExpiry < new Date()) {
       throw new ApiError(401, "Password expired. Please reset your password.");
     }
-
     const now = new Date();
     if (user.blockUntil && user.blockUntil > now) {
       const timeLeft = Math.ceil((user.blockUntil - now) / (60 * 60 * 1000)); // hours remaining
@@ -50,8 +48,8 @@ const loginService = async (req, res) => {
         `Account temporarily blocked. Please try again in ${timeLeft} hour(s).`
       );
     }
-
     const isMatch = await user.comparePassword(password);
+
     if (!isMatch) {
       user.failedLoginAttempts += 1;
       if (user.failedLoginAttempts >= 3) {
@@ -62,7 +60,6 @@ const loginService = async (req, res) => {
           "Account temporarily blocked due to multiple failed attempts. Please try again after 24 hours."
         );
       }
-
       await user.save();
       throw new ApiError(
         401,
@@ -73,8 +70,9 @@ const loginService = async (req, res) => {
 
     user.failedLoginAttempts = 0;
     user.blockUntil = null;
-    user.refershToken = generateAccessToken(res, user);
-    user.accessToken = generateRefreshToken(res, user);
+    user.accessToken = generateAccessToken(res, user);
+    user.refreshToken = generateRefreshToken(res, user);
+
     await user.save();
     req.session.userId = user._id;
     res.json({
@@ -143,20 +141,6 @@ const forgotPasswordService = async (req, res) => {
       throw new ApiError(404, "User not found");
     }
 
-    const otp = generateOTP();
-    const otpExpiry = Date.now() + 15 * 60 * 1000; // OTP valid for 15 minutes
-
-    otpStorage.set(email, { otp, expiry: otpExpiry });
-
-    const mailOptions = {
-      from: process.env.STMP_USER,
-      to: email,
-      subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: ${otp}. This OTP is valid for 15 minutes.`,
-      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. This OTP is valid for 15 minutes.</p>`,
-    };
-
-    await transporter.sendMail(mailOptions);
     res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
     throw new ApiError(500, "Failed to send OTP: " + err.message);
@@ -170,15 +154,21 @@ const sendOtpService = async (req, res) => {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
+
+    const otp = generateOTP()
+
     const mailOptions = {
       from: `"InfinityOPS"${process.env.STMP_USER}`,
       to: email,
       subject: "Password Reset OTP",
-      text: `Your OTP for password reset is: 5454545. This OTP is valid for 15 minutes.`,
-      html: `<p>Your OTP for password reset is: <strong>5454545</strong>. This OTP is valid for 15 minutes.</p>`,
+      text: `Your OTP for password reset is: ${otp}. This OTP is valid for 15 minutes.`,
+      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. This OTP is valid for 15 minutes.</p>`,
     };
 
-    await sendMail(mailOptions.to, mailOptions.subject, mailOptions.html);
+    user.otp = otp
+    user.otpExpiry = Date.now() + 15 * 60 * 1000; // OTP valid for 15 minutes
+    await Promise.all([sendMail(mailOptions.to, mailOptions.subject, mailOptions.html, user.save())])
+
     res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
     throw new ApiError(500, "Failed to send OTP: " + err.message);
@@ -191,7 +181,7 @@ const getProfileService = async (req, res) => {
   }
   try {
     const user = await User.findById(req.session.userId).select(
-      "-password -previousPasswords -__v"
+      "_id name email"
     );
     if (!user) {
       throw new ApiError(404, "User not found");
@@ -201,6 +191,7 @@ const getProfileService = async (req, res) => {
     throw new ApiError(500, "Failed to fetch profile");
   }
 };
+
 const csrfTokenService = async (req, res) => {
   try {
     const csrfToken = createCsrfToken();
@@ -217,20 +208,19 @@ const csrfTokenService = async (req, res) => {
   }
 };
 
-const refreshTokenService = async (req, res) => {
+const refreshTokenService = async (req, res, next) => {
   try {
-    const refreshTokenClient =
-      req.cookies.refreshToken || req.body.refreshToken;
-    const refreshTokenServer = await User.find({
-      refreshToken: refreshTokenClient,
-    });
-    if (!refreshTokenServer) {
+    const { refreshToken } = req.cookies || req.body;
+    const user1 = await User.findOne({ refreshToken });
+    const user = await User.findOne({ refreshToken }).lean();
+    if (!user) {
       throw new ApiError(403, "Invalid refresh token");
     }
-    const accessToken = generateAccessToken();
-    res.status(201).json({ accessToken });
+    const accessToken = generateAccessToken(res, user);
+    res.status(200).json({ accessToken });
   } catch (err) {
     throw new ApiError(500, "Failed to generate accessToken token");
+
   }
 };
 

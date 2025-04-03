@@ -73,7 +73,7 @@ const getProfile = async (req, res) => {
 
 const csrfToken = async (req, res) => {
   try {
-    await auth.csrfService(req, res);
+    await auth.csrfTokenService(req, res);
   } catch (err) {
     res
       .status(err.statusCode || 500)
