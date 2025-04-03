@@ -2,7 +2,8 @@ import axios from "axios";
 import { toast } from "sonner";
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "/api/v1";
+axios.defaults.baseURL = "/server";
+// axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 
 export const csrfToken = async () => {
   try {
@@ -25,14 +26,10 @@ export const login = async (body) => {
   }
 };
 
-export const logout = async (csrf) => {
+export const logout = async () => {
   try {
-    const res = await fetch("/logout", {
-      method: "POST",
-      headers: { "X-CSRF-Token": csrf },
-      withCredentials: true,
-    });
-    return await res.json();
+    const res = await axios.post("/logout");
+    return res;
   } catch (error) {
     return error;
   }
@@ -40,8 +37,8 @@ export const logout = async (csrf) => {
 
 export const getUser = async () => {
   try {
-    const res = await fetch("/user", { method: "GET" });
-    return await res.json();
+    const res = await axios.get("/user");
+    return res.data;
   } catch (error) {
     return error;
   }
