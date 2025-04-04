@@ -9,10 +9,11 @@ const publicRoutes = [
   "/csrf-token",
   "/refresh-token",
 ];
+
 const authMiddleware = (req, res, next) => {
   const isPublicRoute = publicRoutes.some((route) => req.path.endsWith(route));
-  const accessToken = req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
-  console.log(accessToken, "\nhfjkhfsd")
+  const accessToken =
+    req.cookies.accessToken || req.headers.authorization?.split(" ")[1];
   if (isPublicRoute) {
     return next();
   }

@@ -1,7 +1,7 @@
 const express = require("express");
 const authController = require("../controllers/auth.controller");
 const validateRequest = require("../middlewares/validateRequest.middleware");
-const { registerValidation } = require("../validations/auth.validation");
+const authValidations = require("../validations/auth.validation");
 const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
@@ -18,14 +18,19 @@ const authRateLimit = rateLimit({
 router.post(
   "/register",
   authRateLimit,
-  registerValidation,
+  authValidations.registerValidation,
   validateRequest,
   authController.register
 );
 
 router.post("/login", authRateLimit, authController.login);
 router.post("/change-password", authController.changePassword);
-router.post("/forgot-password", authController.forgotPassword);
+router.post(
+  "/forgot-password",
+  authValidations.forgotPasswordValidation,
+  validateRequest,
+  authController.forgotPassword
+);
 router.post("/send-otp", authController.sendOtp);
 router.get("/csrf-token", authController.csrfToken);
 router.get("/refresh-token", authController.refreshToken);

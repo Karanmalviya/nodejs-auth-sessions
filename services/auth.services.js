@@ -4,6 +4,7 @@ const { sendMail } = require("../helper/nodemailer");
 const { createCsrfToken, hashToken } = require("../utils/csrf");
 const { generateAccessToken, generateRefreshToken } = require("../helper/jwt");
 const generateOTP = require("../utils/generateOtp");
+
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -63,7 +64,8 @@ const loginService = async (req, res) => {
       await user.save();
       throw new ApiError(
         401,
-        `Invalid credentials. ${3 - user.failedLoginAttempts
+        `Invalid credentials. ${
+          3 - user.failedLoginAttempts
         } attempt(s) remaining`
       );
     }
@@ -86,7 +88,10 @@ const loginService = async (req, res) => {
     if (err instanceof ApiError) {
       throw err;
     }
-    throw new ApiError(500, "An unexpected error occurred during login");
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -130,20 +135,53 @@ const changePasswordService = async (req, res) => {
     await user.save();
     res.json({ success: true, message: "Password changed successfully" });
   } catch (err) {
-    throw new ApiError(500, "Failed to change password " + err.message);
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
 const forgotPasswordService = async (req, res) => {
+  const { otp, email, newPassword } = req.body;
+  if ((!otp && isNaN(otp)) || !email || !newPassword) {
+    throw new ApiError(400, "Required field are missing");
+  }
   try {
     const user = await User.findOne({ email });
     if (!user) {
       throw new ApiError(404, "User not found");
     }
+    if (!user.otp || user.otp !== otp) {
+      throw new ApiError(401, "Invalid OTP");
+    }
+    if (user.otpExpiry < new Date()) {
+      throw new ApiError(401, "OTP expired. Please request a new one.");
+    }
 
-    res.json({ success: true, message: "OTP sent successfully" });
+    const isPreviousPassword = await Promise.all(
+      user.previousPasswords.map(
+        async () => await user.comparePassword(newPassword)
+      )
+    );
+    if (isPreviousPassword.includes(true)) {
+      throw new ApiError(
+        422,
+        "You cannot use one of your last five passwords. Please choose a new password."
+      );
+    }
+
+    user.password = newPassword;
+    user.otp = null;
+    user.otpExpiry = null;
+    user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+    await user.save();
+    res.json({ success: true, message: "Password reset successfully" });
   } catch (err) {
-    throw new ApiError(500, "Failed to send OTP: " + err.message);
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -155,7 +193,7 @@ const sendOtpService = async (req, res) => {
       throw new ApiError(404, "User not found");
     }
 
-    const otp = generateOTP()
+    const otp = generateOTP();
 
     const mailOptions = {
       from: `"InfinityOPS"${process.env.STMP_USER}`,
@@ -165,13 +203,23 @@ const sendOtpService = async (req, res) => {
       html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. This OTP is valid for 15 minutes.</p>`,
     };
 
-    user.otp = otp
+    user.otp = otp;
     user.otpExpiry = Date.now() + 15 * 60 * 1000; // OTP valid for 15 minutes
-    await Promise.all([sendMail(mailOptions.to, mailOptions.subject, mailOptions.html, user.save())])
+    await Promise.all([
+      sendMail(
+        mailOptions.to,
+        mailOptions.subject,
+        mailOptions.html,
+        user.save()
+      ),
+    ]);
 
     res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
-    throw new ApiError(500, "Failed to send OTP: " + err.message);
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -188,7 +236,10 @@ const getProfileService = async (req, res) => {
     }
     res.json({ success: true, data: user });
   } catch (err) {
-    throw new ApiError(500, "Failed to fetch profile");
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -204,7 +255,10 @@ const csrfTokenService = async (req, res) => {
 
     res.status(201).json({ csrfToken });
   } catch (err) {
-    throw new ApiError(500, "Failed to generate csrf token");
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -220,7 +274,6 @@ const refreshTokenService = async (req, res, next) => {
     res.status(200).json({ accessToken });
   } catch (err) {
     throw new ApiError(500, "Failed to generate accessToken token");
-
   }
 };
 
