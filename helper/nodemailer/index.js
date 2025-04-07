@@ -8,15 +8,15 @@ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   requireTLS: true,
   auth: {
-    user: process.env.STMP_USER,
-    pass: process.env.SMTP_PASWORD,
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
 });
 
 async function sendMail(to, subject, html) {
   try {
     const mailOptions = {
-      from: `"InfinityOPS"${process.env.STMP_USER}`,
+      from: `"InfinityOPS"${process.env.SMTP_USER}`,
       to,
       subject,
       html,
@@ -28,4 +28,4 @@ async function sendMail(to, subject, html) {
   }
 }
 
-module.exports = { sendMail };
+module.exports = {sendMail};

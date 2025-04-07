@@ -9,12 +9,12 @@ function convertToMilliseconds(timeString) {
   if (timeString.includes("s")) return timeValue * 1000;
   return timeValue;
 }
-
+console.log(convertToMilliseconds(process.env.ACCESS_TOKEN_EXPIRY));
 module.exports.generateAccessToken = (res, user) => {
   const accessToken = jwt.sign(
-    { id: user._id },
+    {id: user._id},
     process.env.ACCESS_TOKEN_SECRET,
-    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+    {expiresIn: process.env.ACCESS_TOKEN_EXPIRY}
   );
 
   res.cookie("accessToken", accessToken, {
@@ -28,9 +28,9 @@ module.exports.generateAccessToken = (res, user) => {
 
 module.exports.generateRefreshToken = (res, user) => {
   const refreshToken = jwt.sign(
-    { id: user._id },
+    {id: user._id},
     process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
+    {expiresIn: process.env.REFRESH_TOKEN_EXPIRY}
   );
 
   res.cookie("refreshToken", refreshToken, {

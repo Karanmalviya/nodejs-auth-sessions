@@ -33,7 +33,7 @@ router.post(
 );
 router.post("/send-otp", authController.sendOtp);
 router.get("/csrf-token", authController.csrfToken);
-router.get("/refresh-token", authController.refreshToken);
+router.get("/access-token", authController.accessToken);
 
 router.post("/logout", authController.logout);
 router.get("/user", authController.getProfile);

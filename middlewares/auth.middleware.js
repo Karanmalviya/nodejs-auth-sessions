@@ -7,7 +7,7 @@ const publicRoutes = [
   "/send-otp",
   "/forgot-password",
   "/csrf-token",
-  "/refresh-token",
+  "/access-token",
 ];
 
 const authMiddleware = (req, res, next) => {

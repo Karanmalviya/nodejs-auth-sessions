@@ -6,7 +6,7 @@ const register = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -16,7 +16,7 @@ const login = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -26,7 +26,7 @@ const changePassword = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -36,7 +36,7 @@ const forgotPassword = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -46,7 +46,7 @@ const sendOtp = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -56,7 +56,7 @@ const logout = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -66,7 +66,7 @@ const getProfile = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -76,17 +76,17 @@ const csrfToken = async (req, res) => {
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
-const refreshToken = async (req, res) => {
+const accessToken = async (req, res) => {
   try {
-    await auth.refreshTokenService(req, res);
+    await auth.accessTokenService(req, res);
   } catch (err) {
     res
       .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
+      .json({success: false, message: err.message});
   }
 };
 
@@ -99,5 +99,5 @@ module.exports = {
   forgotPassword,
   sendOtp,
   csrfToken,
-  refreshToken,
+  accessToken,
 };

@@ -6,9 +6,9 @@ const createCsrfToken = () => {
 
 const hashToken = (token) => {
   return crypto
-    .createHmac("sha256", process.env.TOKEN_SECRET)
+    .createHmac("sha256", process.env.CSRF_SECRET)
     .update(token)
     .digest("hex"); // Hash the token using HMAC with SHA-256
 };
 
-module.exports = { createCsrfToken, hashToken };
+module.exports = {createCsrfToken, hashToken};
