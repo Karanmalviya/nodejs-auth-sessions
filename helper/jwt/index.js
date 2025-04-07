@@ -1,20 +1,12 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const convertToMilliseconds = require("../convertToMilliseconds");
 
-function convertToMilliseconds(timeString) {
-  const timeValue = parseInt(timeString);
-  if (timeString.includes("d")) return timeValue * 24 * 60 * 60 * 1000;
-  if (timeString.includes("h")) return timeValue * 60 * 60 * 1000;
-  if (timeString.includes("m")) return timeValue * 60 * 1000;
-  if (timeString.includes("s")) return timeValue * 1000;
-  return timeValue;
-}
-console.log(convertToMilliseconds(process.env.ACCESS_TOKEN_EXPIRY));
 module.exports.generateAccessToken = (res, user) => {
   const accessToken = jwt.sign(
-    {id: user._id},
+    { id: user._id },
     process.env.ACCESS_TOKEN_SECRET,
-    {expiresIn: process.env.ACCESS_TOKEN_EXPIRY}
+    { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
   );
 
   res.cookie("accessToken", accessToken, {
@@ -28,9 +20,9 @@ module.exports.generateAccessToken = (res, user) => {
 
 module.exports.generateRefreshToken = (res, user) => {
   const refreshToken = jwt.sign(
-    {id: user._id},
+    { id: user._id },
     process.env.REFRESH_TOKEN_SECRET,
-    {expiresIn: process.env.REFRESH_TOKEN_EXPIRY}
+    { expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
   );
 
   res.cookie("refreshToken", refreshToken, {

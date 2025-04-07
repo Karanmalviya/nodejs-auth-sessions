@@ -1,22 +1,22 @@
 const User = require("../models/User");
 const ApiError = require("../utils/apiErrors");
-const {sendMail} = require("../helper/nodemailer");
-const {createCsrfToken, hashToken} = require("../utils/csrf");
-const {generateAccessToken, generateRefreshToken} = require("../helper/jwt");
+const { sendMail } = require("../helper/nodemailer");
+const { createCsrfToken, hashToken } = require("../utils/csrf");
+const { generateAccessToken, generateRefreshToken } = require("../helper/jwt");
 const generateOTP = require("../utils/generateOtp");
 
 const registerService = async (req, res) => {
-  const {name, email, password} = req.body;
+  const { name, email, password } = req.body;
   if (!name || !email || !password) {
     throw new ApiError(400, "Required fields are missing");
   }
   try {
-    const user = new User({name, email, password, previousPasswords: []});
+    const user = new User({ name, email, password, previousPasswords: [] });
     await user.save();
     req.session.userId = user._id;
     res
       .status(201)
-      .json({success: true, message: "User registered successfully"});
+      .json({ success: true, message: "User registered successfully" });
   } catch (err) {
     if (err.code === 11000) {
       throw new ApiError(409, "The email is already registered.");
@@ -29,12 +29,12 @@ const registerService = async (req, res) => {
 };
 
 const loginService = async (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
   if (!email || !password) {
     throw new ApiError(400, "Email and password are required");
   }
   try {
-    const user = await User.findOne({email}).select("+password");
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       throw new ApiError(401, "Invalid credentials");
     }
@@ -102,7 +102,7 @@ const logoutService = async (req, res) => {
     }
     res.clearCookie("connect.sid");
     res.clearCookie("tokeb");
-    res.json({success: true, message: "Logout successful"});
+    res.json({ success: true, message: "Logout successful" });
   });
 };
 
@@ -110,7 +110,7 @@ const changePasswordService = async (req, res) => {
   if (!req.session.userId) {
     throw new ApiError(401, "Session expired. Please login again.");
   }
-  const {currentPassword, newPassword} = req.body;
+  const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
     throw new ApiError(400, "Required fields are missing");
   }
@@ -133,7 +133,7 @@ const changePasswordService = async (req, res) => {
     user.password = newPassword;
     user.passwordExpiry = new Date() + 90 * 24 * 60 * 60 * 1000;
     await user.save();
-    res.json({success: true, message: "Password changed successfully"});
+    res.json({ success: true, message: "Password changed successfully" });
   } catch (err) {
     throw new ApiError(
       err.statusCode || 500,
@@ -143,12 +143,12 @@ const changePasswordService = async (req, res) => {
 };
 
 const forgotPasswordService = async (req, res) => {
-  const {otp, email, newPassword} = req.body;
+  const { otp, email, newPassword } = req.body;
   if ((!otp && isNaN(otp)) || !email || !newPassword) {
     throw new ApiError(400, "Required field are missing");
   }
   try {
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
       throw new ApiError(404, "User not found");
     }
@@ -176,7 +176,7 @@ const forgotPasswordService = async (req, res) => {
     user.otpExpiry = null;
     user.passwordExpiry = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
     await user.save();
-    res.json({success: true, message: "Password reset successfully"});
+    res.json({ success: true, message: "Password reset successfully" });
   } catch (err) {
     throw new ApiError(
       err.statusCode || 500,
@@ -186,9 +186,9 @@ const forgotPasswordService = async (req, res) => {
 };
 
 const sendOtpService = async (req, res) => {
-  const {email} = req.body;
+  const { email } = req.body;
   try {
-    const user = await User.findOne({email});
+    const user = await User.findOne({ email });
     if (!user) {
       throw new ApiError(404, "User not found");
     }
@@ -214,7 +214,7 @@ const sendOtpService = async (req, res) => {
       ),
     ]);
 
-    res.json({success: true, message: "OTP sent successfully"});
+    res.json({ success: true, message: "OTP sent successfully" });
   } catch (err) {
     throw new ApiError(
       err.statusCode || 500,
@@ -234,7 +234,7 @@ const getProfileService = async (req, res) => {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
-    res.json({success: true, data: user});
+    res.json({ success: true, data: user });
   } catch (err) {
     throw new ApiError(
       err.statusCode || 500,
@@ -253,7 +253,7 @@ const csrfTokenService = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
     });
 
-    res.status(201).json({csrfToken});
+    res.status(201).json({ csrfToken });
   } catch (err) {
     throw new ApiError(
       err.statusCode || 500,
@@ -264,13 +264,13 @@ const csrfTokenService = async (req, res) => {
 
 const accessTokenService = async (req, res) => {
   try {
-    const {refreshToken} = req.cookies || req.body;
-    const user = await User.findOne({refreshToken}).lean();
+    const { refreshToken } = req.cookies || req.body;
+    const user = await User.findOne({ refreshToken }).lean();
     if (!user) {
       throw new ApiError(403, "Invalid refresh token");
     }
     const accessToken = generateAccessToken(res, user);
-    res.status(200).json({accessToken});
+    res.status(200).json({ accessToken });
   } catch (err) {
     throw new ApiError(500, "Failed to generate accessToken token");
   }
