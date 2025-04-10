@@ -1,3 +1,4 @@
+const constants = require("../constants");
 const ApiError = require("../utils/apiErrors");
 const jwt = require("jsonwebtoken");
 
@@ -22,7 +23,7 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(accessToken, constants.ACCESS_TOKEN_SECRET);
     req.user = decoded;
     return next();
   } catch (err) {

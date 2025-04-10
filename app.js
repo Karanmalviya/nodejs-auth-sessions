@@ -1,20 +1,19 @@
 require("dotenv").config();
-// require("./config/db");
+require("./config/db").connectDB();
 const express = require("express");
 const authRoutes = require("./routes/auth.routes");
-const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const errorMiddleware = require("./middlewares/error.middleware");
 const csrfMiddleware = require("./middlewares/csrf.middleware");
 const authMiddleware = require("./middlewares/auth.middleware");
-const {corsMiddleware} = require("./config/cors");
+const { corsMiddleware } = require("./config/cors");
 const security = require("./config/security");
 const sessions = require("./config/session");
-const {connectDB} = require("./config/db");
+const constants = require("./constants");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-connectDB();
+const PORT = constants.PORT;
+
 app.use(express.json());
 app.use(cookieParser());
 

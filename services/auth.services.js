@@ -4,6 +4,7 @@ const { sendMail } = require("../helper/nodemailer");
 const { createCsrfToken, hashToken } = require("../utils/csrf");
 const { generateAccessToken, generateRefreshToken } = require("../helper/jwt");
 const generateOTP = require("../utils/generateOtp");
+const constants = require("../constants");
 
 const registerService = async (req, res) => {
   const { name, email, password } = req.body;
@@ -196,7 +197,7 @@ const sendOtpService = async (req, res) => {
     const otp = generateOTP();
 
     const mailOptions = {
-      from: `"InfinityOPS"${process.env.SMTP_USER}`,
+      from: `"InfinityOPS"${constants.SMTP_USER}`,
       to: email,
       subject: "Password Reset OTP",
       text: `Your OTP for password reset is: ${otp}. This OTP is valid for 15 minutes.`,
@@ -250,7 +251,7 @@ const csrfTokenService = async (req, res) => {
     res.cookie("csrf_token", hashToken(csrfToken), {
       httpOnly: true,
       sameSite: "strict",
-      secure: process.env.NODE_ENV === "production",
+      secure: constants.NODE_ENV === "production",
     });
 
     res.status(201).json({ csrfToken });
