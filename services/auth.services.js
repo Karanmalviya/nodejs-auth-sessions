@@ -230,7 +230,7 @@ const getProfileService = async (req, res) => {
   }
   try {
     const user = await User.findById(req.session.userId).select(
-      "_id name email"
+      "_id name email image"
     );
     if (!user) {
       throw new ApiError(404, "User not found");

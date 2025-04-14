@@ -10,7 +10,8 @@ const { corsMiddleware } = require("./config/cors");
 const security = require("./config/security");
 const sessions = require("./config/session");
 const constants = require("./constants");
-
+const routers = require("./routes");
+const path = require("path");
 const app = express();
 const PORT = constants.PORT;
 
@@ -24,7 +25,9 @@ app.use(corsMiddleware);
 app.use(csrfMiddleware);
 app.use(authMiddleware);
 
-app.use("/api/v1", authRoutes);
+app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
+
+app.use("/api/v1", routers);
 app.get("/", (req, res) => {
   res.send("Hello");
 });

@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema({
   accessToken: { type: String, default: null },
   otp: { type: Number, default: null },
   otpExpiry: { type: Date, default: null },
+  image: {
+    name: { type: String, default: null },
+    url: { type: String, default: null },
+  },
 });
 
 userSchema.pre("save", async function (next) {
