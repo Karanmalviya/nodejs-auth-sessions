@@ -108,9 +108,6 @@ const logoutService = async (req, res) => {
 };
 
 const changePasswordService = async (req, res) => {
-  if (!req.session.userId) {
-    throw new ApiError(401, "Session expired. Please login again.");
-  }
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
     throw new ApiError(400, "Required fields are missing");
@@ -224,26 +221,6 @@ const sendOtpService = async (req, res) => {
   }
 };
 
-const getProfileService = async (req, res) => {
-  if (!req.session.userId) {
-    throw new ApiError(401, "Session expired. Please login again.");
-  }
-  try {
-    const user = await User.findById(req.session.userId).select(
-      "_id name email image"
-    );
-    if (!user) {
-      throw new ApiError(404, "User not found");
-    }
-    res.json({ success: true, data: user });
-  } catch (err) {
-    throw new ApiError(
-      err.statusCode || 500,
-      err.message || "Internal Server Error"
-    );
-  }
-};
-
 const csrfTokenService = async (req, res) => {
   try {
     const csrfToken = createCsrfToken();
@@ -277,14 +254,47 @@ const accessTokenService = async (req, res) => {
   }
 };
 
+const getUserService = async (req, res) => {
+  try {
+    const user = await User.findById(req.session.userId).select(
+      "_id name email image"
+    );
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    res.json({ success: true, data: user });
+  } catch (err) {
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
+  }
+};
+
+const updateUserService = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate({ _id: req.session.userId });
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    res.json({ success: true, data: user });
+  } catch (err) {
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
+  }
+};
+
 module.exports = {
   registerService,
   loginService,
   changePasswordService,
   logoutService,
-  getProfileService,
+  getUserService,
   forgotPasswordService,
   sendOtpService,
   csrfTokenService,
   accessTokenService,
+  updateUserService,
 };

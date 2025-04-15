@@ -11,7 +11,7 @@ const uploadService = async (req, res) => {
       throw new ApiError(400, "No file uploaded.");
     }
 
-    const { filename } = req.file;
+    const { originalname, filename } = req.file;
 
     const user = await User.findById(req.session.userId);
     if (!user) {
@@ -19,15 +19,15 @@ const uploadService = async (req, res) => {
     }
 
     user.image = {
-      name: filename,
+      name: originalname,
       url: `/uploads/${filename}`,
     };
 
     await user.save();
 
-    res.status(201).json({
-      message: "✅ File uploaded successfully",
-      image: user.image,
+    res.json({
+      success: true,
+      message: "uploaded successfully",
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -35,3 +35,4 @@ const uploadService = async (req, res) => {
 };
 
 module.exports = { uploadService };
+

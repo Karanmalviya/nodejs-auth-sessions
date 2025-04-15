@@ -36,6 +36,9 @@ router.get("/csrf-token", authController.csrfToken);
 router.get("/access-token", authController.accessToken);
 
 router.post("/logout", authController.logout);
-router.get("/user", authController.getProfile);
+router
+  .route("/user")
+  .get(authController.getUser)
+  .put(authController.updateUser);
 
 module.exports = router;

@@ -18,6 +18,10 @@ const authMiddleware = (req, res, next) => {
   if (isPublicRoute) {
     return next();
   }
+  if (!req.session.userId) {
+    throw new ApiError(401, "Session expired. Please login again.");
+  }
+
   if (!accessToken) {
     throw new ApiError(401, "Access token required");
   }

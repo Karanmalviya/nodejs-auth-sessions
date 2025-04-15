@@ -1,4 +1,5 @@
 const { hashToken } = require("../utils/csrf");
+
 const csrfMiddleware = (req, res, next) => {
   if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
     const csrfTokenClient = req.headers["x-csrf-token"];

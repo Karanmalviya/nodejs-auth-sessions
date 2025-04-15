@@ -60,16 +60,6 @@ const logout = async (req, res) => {
   }
 };
 
-const getProfile = async (req, res) => {
-  try {
-    await auth.getProfileService(req, res);
-  } catch (err) {
-    res
-      .status(err.statusCode || 500)
-      .json({ success: false, message: err.message });
-  }
-};
-
 const csrfToken = async (req, res) => {
   try {
     await auth.csrfTokenService(req, res);
@@ -90,14 +80,35 @@ const accessToken = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  try {
+    await auth.getUserService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    await auth.updateUserService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   register,
   login,
   logout,
-  getProfile,
   changePassword,
   forgotPassword,
   sendOtp,
   csrfToken,
   accessToken,
+  getUser,
+  updateUser,
 };

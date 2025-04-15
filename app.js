@@ -1,7 +1,6 @@
 require("dotenv").config();
 require("./config/db").connectDB();
 const express = require("express");
-const authRoutes = require("./routes/auth.routes");
 const cookieParser = require("cookie-parser");
 const errorMiddleware = require("./middlewares/error.middleware");
 const csrfMiddleware = require("./middlewares/csrf.middleware");
@@ -26,8 +25,8 @@ app.use(csrfMiddleware);
 app.use(authMiddleware);
 
 app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
-
 app.use("/api/v1", routers);
+
 app.get("/", (req, res) => {
   res.send("Hello");
 });
@@ -35,4 +34,5 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
 app.use(errorMiddleware);
