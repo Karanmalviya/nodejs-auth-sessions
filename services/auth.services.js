@@ -256,9 +256,10 @@ const accessTokenService = async (req, res) => {
 
 const getUserService = async (req, res) => {
   try {
-    const user = await User.findById(req.session.userId).select(
-      "_id name email image"
-    );
+    const user = await User.findById(req.session.userId)
+      .select("_id name email image")
+      .lean();
+
     if (!user) {
       throw new ApiError(404, "User not found");
     }
@@ -271,18 +272,27 @@ const getUserService = async (req, res) => {
   }
 };
 
-const updateUserService = async (req, res) => {
+const updateUserService = async (req, res, next) => {
   try {
-    const user = await User.findByIdAndUpdate({ _id: req.session.userId });
+    const { name, email } = req.body;
+    const updateData = { name, email };
+
+    if (req.file) {
+      const { originalname, filename } = req.file;
+      updateData.image = { name: originalname, url: `/uploads/${filename}` };
+    }
+
+    const user = await User.findOneAndUpdate(
+      { _id: req.session.userId },
+      updateData,
+      { new: true }
+    );
     if (!user) {
       throw new ApiError(404, "User not found");
     }
     res.json({ success: true, data: user });
   } catch (err) {
-    throw new ApiError(
-      err.statusCode || 500,
-      err.message || "Internal Server Error"
-    );
+    next(err);
   }
 };
 

@@ -90,9 +90,9 @@ const getUser = async (req, res) => {
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
-    await auth.updateUserService(req, res);
+    await auth.updateUserService(req, res, next);
   } catch (err) {
     res
       .status(err.statusCode || 500)

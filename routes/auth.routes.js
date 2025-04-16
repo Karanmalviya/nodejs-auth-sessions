@@ -3,6 +3,7 @@ const authController = require("../controllers/auth.controller");
 const validateRequest = require("../middlewares/validateRequest.middleware");
 const authValidations = require("../validations/auth.validation");
 const rateLimit = require("express-rate-limit");
+const uploads = require("../middlewares/upload.middleware");
 
 const router = express.Router();
 const authRateLimit = rateLimit({
@@ -39,6 +40,6 @@ router.post("/logout", authController.logout);
 router
   .route("/user")
   .get(authController.getUser)
-  .put(authController.updateUser);
+  .put(uploads.single("file"), authController.updateUser);
 
 module.exports = router;
