@@ -3,9 +3,7 @@ const ApiError = require("../utils/apiErrors");
 
 const uploadService = async (req, res) => {
   try {
-    if (!req.session?.userId) {
-      throw new ApiError(401, "Session expired. Please login again.");
-    }
+  
 
     if (!req.file) {
       throw new ApiError(400, "No file uploaded.");
