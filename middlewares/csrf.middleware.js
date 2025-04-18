@@ -11,8 +11,8 @@ const csrfMiddleware = (req, res, next) => {
         message: "Missing CSRF token",
       });
     }
-
     const csrfTokenClientHash = hashToken(csrfTokenClient);
+    console.log("CSRF Token Client:", csrfTokenClientHash + "\n" + csrf_token);
     if (csrfTokenClientHash !== csrf_token) {
       return res.status(403).json({
         success: false,
