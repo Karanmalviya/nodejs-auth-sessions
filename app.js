@@ -11,8 +11,18 @@ const sessions = require("./config/session");
 const constants = require("./constants");
 const routers = require("./routes");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = express();
 const PORT = constants.PORT;
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: constants.WHITE_LIST_DOMAIN,
+  },
+});
+
 
 app.use(express.json());
 app.use(cookieParser());

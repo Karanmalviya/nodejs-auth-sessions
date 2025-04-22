@@ -13,5 +13,6 @@ const constants = {
   ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY,
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
   REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY,
+  WHITE_LIST_DOMAIN: JSON.parse(process.env.WHITE_LIST_DOMAIN),
 };
 module.exports = constants;

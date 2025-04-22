@@ -274,8 +274,8 @@ const getUserService = async (req, res) => {
 
 const updateUserService = async (req, res, next) => {
   try {
-    const { name, email } = req.body;
-    const updateData = { name, email };
+    const { name } = req.body;
+    const updateData = { name };
 
     if (req.file) {
       const { originalname, filename } = req.file;
