@@ -13,6 +13,7 @@ export default function Routes() {
           <Route path="/login" element={<Login />} />
           <Route path="/registration" element={<Registration />} />
         </Route>
+
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Home />} />
         </Route>

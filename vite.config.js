@@ -9,6 +9,7 @@ export default defineConfig({
     proxy: {
       "/server": {
         target: "http://localhost:5000/api/v1",
+        // target: "https://nodejs-auth-sessions.vercel.app/api/v1",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/server/, ""),
       },

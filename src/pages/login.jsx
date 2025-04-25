@@ -5,6 +5,7 @@ import { Context } from "../context";
 
 const Login = () => {
   const [data, setData] = useState({ email: "", password: "" });
+
   const navigate = useNavigate();
   const csrfToken = useContext(Context);
 
