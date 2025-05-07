@@ -272,6 +272,18 @@ const getUserService = async (req, res) => {
   }
 };
 
+const getAllUserService = async (req, res) => {
+  try {
+    const users = await User.find().select("_id name email image").lean();
+    res.json({ success: true, data: users });
+  } catch (err) {
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
+  }
+};
+
 const updateUserService = async (req, res, next) => {
   try {
     const { name } = req.body;
@@ -290,9 +302,12 @@ const updateUserService = async (req, res, next) => {
     if (!user) {
       throw new ApiError(404, "User not found");
     }
-    res.json({ success: true, data: user });
+    res.json({ success: true, message: "User updated successfully" });
   } catch (err) {
-    next(err);
+    throw new ApiError(
+      err.statusCode || 500,
+      err.message || "Internal Server Error"
+    );
   }
 };
 
@@ -307,4 +322,5 @@ module.exports = {
   csrfTokenService,
   accessTokenService,
   updateUserService,
+  getAllUserService,
 };

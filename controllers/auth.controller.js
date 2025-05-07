@@ -90,6 +90,16 @@ const getUser = async (req, res) => {
   }
 };
 
+const getAllUser = async (req, res) => {
+  try {
+    await auth.getAllUserService(req, res);
+  } catch (err) {
+    res
+      .status(err.statusCode || 500)
+      .json({ success: false, message: err.message });
+  }
+};
+
 const updateUser = async (req, res, next) => {
   try {
     await auth.updateUserService(req, res, next);
@@ -111,4 +121,5 @@ module.exports = {
   accessToken,
   getUser,
   updateUser,
+  getAllUser,
 };

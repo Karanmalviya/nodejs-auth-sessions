@@ -4,7 +4,6 @@ const csrfMiddleware = (req, res, next) => {
   if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
     const csrfTokenClient = req.headers["x-csrf-token"];
     const { csrf_token } = req.cookies;
-
     if (!csrfTokenClient && !csrf_token) {
       return res.status(403).json({
         success: false,
@@ -12,7 +11,6 @@ const csrfMiddleware = (req, res, next) => {
       });
     }
     const csrfTokenClientHash = hashToken(csrfTokenClient);
-    console.log("CSRF Token Client:", csrfTokenClientHash + "\n" + csrf_token);
     if (csrfTokenClientHash !== csrf_token) {
       return res.status(403).json({
         success: false,

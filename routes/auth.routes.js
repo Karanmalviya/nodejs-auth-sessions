@@ -37,6 +37,9 @@ router.get("/csrf-token", authController.csrfToken);
 router.get("/access-token", authController.accessToken);
 
 router.post("/logout", authController.logout);
+
+router.route("/users").get(authController.getAllUser);
+
 router
   .route("/user")
   .get(authController.getUser)
