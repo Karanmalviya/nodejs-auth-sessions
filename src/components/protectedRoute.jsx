@@ -12,12 +12,5 @@ export default function ProtectedRoute() {
     return <div>Loading...</div>;
   }
 
-  return isLoggedIn ? (
-    <>
-      <CustomNavbar />
-      <Outlet />
-    </>
-  ) : (
-    <Navigate to="/login" />
-  );
+  return isLoggedIn ? <Outlet /> : <Navigate to="/login" />;
 }

@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "sonner";
 
 axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "/server";
+axios.defaults.baseURL = import.meta.env.VITE_API_URL + "/api/v1";
 // axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 
 export const csrfToken = async () => {

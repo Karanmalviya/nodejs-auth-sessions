@@ -5,6 +5,7 @@ import { Context } from "../context";
 export function useAuth() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(true);
   const csrfToken = useContext(Context);
 
   useEffect(() => {
@@ -12,6 +13,7 @@ export function useAuth() {
       try {
         const res = await getUser(csrfToken);
         setIsLoggedIn(res.success);
+        setData(res.data);
       } catch (error) {
         console.error("Authentication check failed:", error);
         setIsLoggedIn(false);
@@ -23,5 +25,5 @@ export function useAuth() {
     checkAuth();
   }, []);
 
-  return { isLoggedIn, isLoading };
+  return { isLoggedIn, isLoading, data };
 }
