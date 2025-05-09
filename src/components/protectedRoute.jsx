@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router";
 import { useAuth } from "../hooks/useAuth";
 // import Navbar from "./navbar";
 import CustomNavbar from "./navbar";
+import Layout from "./layout";
 // import Navbar from "./navbar";
 
 export default function ProtectedRoute() {
@@ -12,5 +13,11 @@ export default function ProtectedRoute() {
     return <div>Loading...</div>;
   }
 
-  return isLoggedIn ? <Outlet /> : <Navigate to="/login" />;
+  return isLoggedIn ? (
+    <Layout>
+      <Outlet />
+    </Layout>
+  ) : (
+    <Navigate to="/login" />
+  );
 }

@@ -6,6 +6,7 @@ import Registration from "./pages/registration";
 import Home from "./pages/home";
 import { PublicRoute } from "./components/PublicRoute";
 import Chat from "./pages/chat";
+
 export default function Routes() {
   return (
     <BrowserRouter>
@@ -16,7 +17,8 @@ export default function Routes() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Chat />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/:id" element={<Chat />} />
         </Route>
       </Routers>
     </BrowserRouter>

@@ -3,7 +3,6 @@ import { toast } from "sonner";
 
 axios.defaults.withCredentials = true;
 axios.defaults.baseURL = import.meta.env.VITE_API_URL + "/api/v1";
-// axios.defaults.headers.common['Authorization'] = AUTH_TOKEN;
 
 export const csrfToken = async () => {
   try {
@@ -14,7 +13,7 @@ export const csrfToken = async () => {
     return error;
   }
 };
-
+await csrfToken();
 export const login = async (body) => {
   try {
     const res = await axios.post("/login", body);
@@ -38,6 +37,47 @@ export const logout = async () => {
 export const getUser = async () => {
   try {
     const res = await axios.get("/user");
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const updatetUser = async (body) => {
+  try {
+    const res = await axios.put("/user", body);
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getUsers = async () => {
+  try {
+    const res = await axios.get("/users");
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getFCMToken = async () => {
+  try {
+    const res = await axios.put("/fcm-token");
+    return res.data;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const getMessages = async (query) => {
+  const { from, to, page, pageSize } = query;
+  try {
+    const res = await axios.get(
+      `/message?from=${from}&to=${to}&page=${page ?? 1}&pageSize=${
+        pageSize ?? 10
+      }`
+    );
     return res.data;
   } catch (error) {
     return error;
