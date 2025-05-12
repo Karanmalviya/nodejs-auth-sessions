@@ -1,23 +1,33 @@
 require("dotenv").config();
 require("./config/db").connectDB();
-
-const http = require("http");
-const { Server } = require("socket.io");
 const constants = require("./constants");
-const app = require("./app");
-const socketHandler = require("./socket");
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const csrfMiddleware = require("./middlewares/csrf.middleware");
+const authMiddleware = require("./middlewares/auth.middleware");
+const errorMiddleware = require("./middlewares/error.middleware");
+const { corsMiddleware } = require("./config/cors");
+const security = require("./config/security");
+const sessions = require("./config/session");
+const routers = require("./routes");
+const path = require("path");
 
-const server = http.createServer(app);
+const app = express();
 
-const io = new Server(server, {
-  cors: {
-    origin: constants.WHITE_LIST_DOMAIN,
-    credentials: true,
-  },
-});
+app.use(express.json());
+app.use(cookieParser());
+app.use(security);
+app.use(sessions);
+app.use(corsMiddleware);
+app.use(csrfMiddleware);
+app.use(authMiddleware);
 
-socketHandler(io);
+app.use("/api/v1/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/v1", routers);
+app.get("/", (req, res) => res.send("Hello"));
 
-server.listen(constants.PORT, () => {
+app.listen(constants.PORT, () => {
   console.log(`Server running on http://localhost:${constants.PORT}`);
 });
+
+app.use(errorMiddleware);
